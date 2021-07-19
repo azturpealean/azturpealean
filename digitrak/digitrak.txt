@@ -1,0 +1,163 @@
+CREATE TABLE CUST_DETAILS(
+cust_id int AUTO_INCREMENT PRIMARY KEY,
+fname varchar(50) NOT NULL,
+lname varchar(50) NOT NULL,
+mname varchar(50), 
+date_join date DEFAULT CURRENT_TIMESTAMP, 
+birthdate date NOT NULL, 
+email varchar(100) NOT NULL, 
+login varchar(50) NOT NULL, 
+password varchar(50) NOT NULL, 
+val_email bit DEFAULT 0);
+
+CREATE TABLE ADDRESS(
+cust_id int, 
+address_line1 varchar(100) NOT NULL,
+address_line2 varchar(100), 
+postcode int NOT NULL, 
+curr_address bit, 
+type varchar(50), 
+city varchar(100) NOT NULL, 
+country varchar(100) NOT NULL, 
+description varchar(100),
+FOREIGN KEY (cust_id) REFERENCES CUST_DETAILS(cust_id));
+
+CREATE TABLE PHONE(
+cust_id int, 
+number int NOT NULL, 
+description varchar(100), 
+cur_phone bit, 
+FOREIGN KEY (cust_id) REFERENCES CUST_DETAILS(cust_id));
+
+CREATE TABLE ADMIN_INFO(
+admin_id int AUTO_INCREMENT PRIMARY KEY,
+login varchar(100) NOT NULL, 
+password varchar(50) NOT NULL,
+email varchar(100) NOT NULL);
+
+CREATE TABLE MANUFACTURER(
+manufac_id int AUTO_INCREMENT PRIMARY KEY,
+name varchar(100) NOT NULL, 
+logo varchar(50) NOT NULL);
+
+CREATE TABLE PHONE_DEVICES(
+phone_id int AUTO_INCREMENT PRIMARY KEY, 
+manufac_id int NOT NULL, 
+model varchar(100) NOT NULL, 
+color varchar(50) NOT NULL, 
+description varchar(100) NOT NULL, 
+date_released date NOT NULL, 
+date_published date NOT NULL, 
+battery_type varchar(50) NOT NULL, 
+display_type varchar(50) NOT NULL, 
+available bit NOT NULL, 
+large_img varchar(50) NOT NULL, 
+small_img varchar(50) NOT NULL, 
+thumbnail_img varchar(50) NOT NULL, 
+price int NOT NULL, 
+not_avail_date date NOT NULL,
+FOREIGN KEY (manufac_id) REFERENCES MANUFACTURER(manufac_id));
+
+CREATE TABLE SPECIALS_PHONE(
+phone_id int, 
+date_until date NOT NULL, 
+discounted_price int NOT NULL, 
+FOREIGN KEY (phone_id) REFERENCES PHONE_DEVICES(phone_id));
+
+CREATE TABLE RATING_PHONE(
+phone_id int, 
+cust_id int, 
+rating int, 
+FOREIGN KEY (phone_id) REFERENCES PHONE_DEVICES(phone_id),
+FOREIGN KEY (cust_id) REFERENCES CUST_DETAILS(cust_id),
+CHECK(rating>=0 and rating<=10));
+
+CREATE TABLE INVENTORY(
+phone_id int, 
+stock int, 
+re_order_qty int, 
+min_stock int, 
+lead_time int, 
+FOREIGN KEY(phone_id) REFERENCES PHONE_DEVICES(phone_id));
+
+CREATE TABLE SHOPPING_CART(
+cust_id int,
+phone_id int NOT NULL, 
+price int NOT NULL, 
+date_added date DEFAULT CURRENT_TIMESTAMP, 
+units int NOT NULL,
+FOREIGN KEY(cust_id) REFERENCES CUST_DETAILS(cust_id), 
+FOREIGN KEY(phone_id) REFERENCES PHONE_DEVICES(phone_id));
+
+CREATE TABLE ONLINE_ORDER(
+order_id int AUTO_INCREMENT PRIMARY KEY, 
+order_date date DEFAULT CURRENT_TIMESTAMP, 
+pay_approv_code int, 
+cust_id int NOT NULL, 
+backorder bit, 
+status varchar(50), 
+FOREIGN KEY(cust_id) REFERENCES CUST_DETAILS(cust_id));
+
+CREATE TABLE ONLINE_ORDER_ITEM(
+order_id int NOT NULL,
+phone_id int NOT NULL,
+price int NOT NULL, 
+number_of_units int NOT NULL, 
+due_date date, 
+FOREIGN KEY(order_id) REFERENCES ONLINE_ORDER(order_id),
+FOREIGN KEY(phone_id) REFERENCES PHONE_DEVICES(phone_id));
+
+CREATE TABLE TRANSACTIONS(
+transac_id int AUTO_INCREMENT PRIMARY KEY,
+order_id int, 
+cust_id int, 
+total_num_items int, 
+FOREIGN KEY(order_id) REFERENCES ONLINE_ORDER(order_id),
+FOREIGN KEY(cust_id) REFERENCES CUST_DETAILS(cust_id));
+
+CREATE TABLE PAY_RECIEVED(
+pay_id int AUTO_INCREMENT PRIMARY KEY,
+order_id int NOT NULL, 
+cust_id int NOT NULL, 
+transac_id int NOT NULL, 
+pay_approv_code int, 
+date_pay date DEFAULT CURRENT_TIMESTAMP, 
+fee int, 
+IP int, 
+FOREIGN KEY(transac_id) REFERENCES TRANSACTIONS(transac_id),
+FOREIGN KEY(order_id) REFERENCES ONLINE_ORDER(order_id),
+FOREIGN KEY(cust_id) REFERENCES CUST_DETAILS(cust_id));
+
+CREATE TABLE FORUM(
+forum_id int AUTO_INCREMENT PRIMARY KEY, 
+name varchar(100) NOT NULL, 
+description varchar(100), 
+cust_id int NOT NULL, 
+manufac_id int NOT NULL, 
+active bit, 
+date_start date DEFAULT CURRENT_TIMESTAMP, 
+login_req bit DEFAULT 1,
+FOREIGN KEY(cust_id) REFERENCES CUST_DETAILS(cust_id), 
+FOREIGN KEY(manufac_id) REFERENCES MANUFACTURER(manufac_id));
+
+CREATE TABLE THREADS(
+thread_id int AUTO_INCREMENT PRIMARY KEY, 
+forum_id int, 
+name varchar(100) NOT NULL, 
+cust_id int NOT NULL, 
+date_start date DEFAULT CURRENT_TIMESTAMP, 
+FOREIGN KEY (forum_id) REFERENCES FORUM(forum_id),
+FOREIGN KEY (cust_id) REFERENCES CUST_DETAILS(cust_id));
+
+CREATE TABLE POSTS(
+post_id int AUTO_INCREMENT PRIMARY KEY, 
+thread_id int NOT NULL, 
+forum_id int NOT NULL, 
+subject varchar(100), 
+posted_by int NOT NULL,  
+post_date date DEFAULT CURRENT_TIMESTAMP, 
+IP int, 
+message varchar(200), 
+FOREIGN KEY (thread_id) REFERENCES THREADS(thread_id),
+FOREIGN KEY (forum_id) REFERENCES FORUM(forum_id),
+FOREIGN KEY (posted_by) REFERENCES CUST_DETAILS(cust_id));
